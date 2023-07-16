@@ -1,7 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 var child_process_1 = require("child_process");
-//import path, { resolve } from "path/posix";
 function start() {
     //spawnSample('cmd.exe',['winget', '-v']);
     execSample('winget list');
