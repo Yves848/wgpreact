@@ -1,6 +1,9 @@
 import { app, BrowserWindow } from 'electron';
 import { exec } from "child_process";
 import path from 'node:path'
+import { readFileSync, writeFileSync } from 'fs';
+import { XMLParser } from 'fast-xml-parser';
+
 import '@fontsource/roboto/300.css';
 import '@fontsource/roboto/400.css';
 import '@fontsource/roboto/500.css';
@@ -27,10 +30,9 @@ function exexCommand(args: string): Promise<string> {
   return new Promise<string>((resolve, reject) => {
     exec(args, { 'encoding': 'utf8' }, (error, stdout) => {
       if (error) {
-        reject(stdout as string);
-
+        reject(error.message as string);
       }
-      resolve (stdout as string);
+      resolve(stdout as string);
     });
   })
 }
@@ -68,18 +70,32 @@ function execSample(args: string): string {
 }
 
 async function createWindow() {
-  console.log(app.getLocale());
-  console.log(app.getPreferredSystemLanguages());
-  console.log(app.getSystemLocale());
-  var version: string  = '';
-  try
-  {
+  var l = app.getLocale();
+  var locale = `${l}-${l.toUpperCase()}`
+  var version: string = '';
+  try {
     version = await exexCommand("winget -v");
   }
-  catch(e) {
+  catch (e) {
     version = `Erreur : ${e}`;
   }
+
   console.log(`${version}`);
+
+  let reqHeader = new Headers();
+  reqHeader.append('Content-Type', 'text/xml');
+  let initObject = {
+    method: 'GET', headers: reqHeader,
+  };
+  const url = `https://raw.githubusercontent.com/microsoft/winget-cli/release-${version}/Localization/Resources/${locale}/winget.resw`
+
+  var resp = await fetch(url,initObject);
+  var data = await resp.text();
+  const parser = new XMLParser();
+
+  const json = parser.parse(data);
+  console.log(json.data)
+
   win = new BrowserWindow({
     icon: path.join(process.env.PUBLIC, 'wingetposh2.png'),
     webPreferences: {
