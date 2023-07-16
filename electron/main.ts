@@ -23,6 +23,9 @@ let win: BrowserWindow | null
 const VITE_DEV_SERVER_URL = process.env['VITE_DEV_SERVER_URL']
 
 function createWindow() {
+  console.log(app.getLocale());
+  console.log(app.getPreferredSystemLanguages());
+  console.log(app.getSystemLocale());
   win = new BrowserWindow({
     icon: path.join(process.env.PUBLIC, 'wingetposh2.png'),
     webPreferences: {
@@ -47,6 +50,7 @@ function createWindow() {
     win.loadFile(path.join(process.env.DIST, 'index.html'))
   }
 }
+
 
 app.on('window-all-closed', () => {
   win = null

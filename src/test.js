@@ -57,6 +57,8 @@ function execSample(args) {
         //console.log(`exec on close code: ${code} args: ${args}`);
     });
 }
+var locale = Intl.DateTimeFormat().resolvedOptions().locale;
+console.log(locale);
 start();
 // const { exec } = require('child_process');
 // exec('winget search code', (error:any, stdout:string, stderr:any)=> {

@@ -1,5 +1,6 @@
 import { exec, execFile, fork, spawn } from "child_process";
 //import path, { resolve } from "path/posix";
+import os from 'os';
 
 function start() {
     //spawnSample('cmd.exe',['winget', '-v']);
@@ -58,6 +59,10 @@ function execSample(args: string) {
       //console.log(`exec on close code: ${code} args: ${args}`);
   });
 }
+
+let locale:string = Intl.DateTimeFormat().resolvedOptions().locale;
+console.log(locale);
+
 start();
 
 
