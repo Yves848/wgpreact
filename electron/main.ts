@@ -2,7 +2,9 @@ import { app, BrowserWindow } from 'electron';
 import { exec } from "child_process";
 import path from 'node:path'
 import { readFileSync, writeFileSync } from 'fs';
-import { XMLParser } from 'fast-xml-parser';
+import { XMLParser, XMLBuilder } from 'fast-xml-parser';
+import wgProp from '@/Classes/cMain';
+import wgProperty from '@/Interfaces/IMain';
 
 import '@fontsource/roboto/300.css';
 import '@fontsource/roboto/400.css';
@@ -36,6 +38,8 @@ function exexCommand(args: string): Promise<string> {
     });
   })
 }
+
+let wingetProperties = new Map<string, string>();
 
 function execSample(args: string): string {
   var result: string = '';
@@ -80,7 +84,7 @@ async function createWindow() {
     version = `Erreur : ${e}`;
   }
 
-  console.log(`${version}`);
+  //console.log(`${version}`);
 
   let reqHeader = new Headers();
   reqHeader.append('Content-Type', 'text/xml');
@@ -88,14 +92,30 @@ async function createWindow() {
     method: 'GET', headers: reqHeader,
   };
   const url = `https://raw.githubusercontent.com/microsoft/winget-cli/release-${version}/Localization/Resources/${locale}/winget.resw`
-
-  var resp = await fetch(url,initObject);
+  //console.log(url);
+  var resp = await fetch(url, initObject);
   var data = await resp.text();
-  const parser = new XMLParser();
+  //console.log(data);
 
+  const options = {
+    ignoreAttributes: false,
+    tagValueProcessor: (tagName, tagValue: any, jPath, hasAttributes, isLeafNode: boolean) => {
+      if (isLeafNode) return tagValue;
+      return "";
+    }
+  };
+  const parser = new XMLParser(options);
   const json = parser.parse(data);
-  console.log(json.data)
-
+  //console.log(json.root.data.length);
+  for (var i = 0; i < json.root.data.length; i++) {
+    //console.log(`${json.root.data[i]["@_name"]} : ${json.root.data[i]["value"]}`);
+    wingetProperties.set(json.root.data[i]["@_name"], json.root.data[i]["value"]);
+  }
+  //console.log(json.root.data[0])
+ var js = JSON.stringify(Object.fromEntries(wingetProperties));
+ writeFileSync(path.join(__dirname, "test.json"), js, {
+  flag: 'w',
+});
   win = new BrowserWindow({
     icon: path.join(process.env.PUBLIC, 'wingetposh2.png'),
     webPreferences: {
