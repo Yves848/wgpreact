@@ -1,8 +1,8 @@
-import { app, BrowserWindow, ipcMain } from 'electron';
+import { app, BrowserWindow, ipcMain, ipcRenderer } from 'electron';
 import { exec } from "child_process";
 import path from 'node:path'
-import { readFileSync, writeFileSync } from 'fs';
-import { XMLParser, XMLBuilder } from 'fast-xml-parser';
+import { writeFileSync } from 'fs';
+import { XMLParser } from 'fast-xml-parser';
 import wgProp from '@/Classes/cMain';
 import wgProperty from '@/Interfaces/IMain';
 
@@ -41,36 +41,25 @@ function exexCommand(args: string): Promise<string> {
 
 let wingetProperties = new Map<string, string>();
 
-function execSample(args: string): string {
-  var result: string = '';
-  const execProcess = exec(args, { 'encoding': 'utf8' }, (error, stdout) => {
-    var s: string[] = [];
-    s = (stdout as string).split('\r\n');
-    s.forEach((line, i) => {
-      if (line.match('----------')) {
-        console.log(s[i - 1]);
-      }
-      if (line.match('winget$')) {
-        console.log(line);
-      }
+function execSample(args: string): Promise<string> {
+  return new Promise<string>((resolve, reject) => {
+    var result: string = '';
+    const execProcess = exec(args, { 'encoding': 'utf8' }, (error, stdout) => {
+      var s: string[] = [];
+      s = (stdout as string).split('\r\n');
+      s.forEach((line, i) => {
+        if (line.match('----------')) {
+          //console.log(s[i - 1]);
+        }
+        if (line.match('winget$')) {
+          //console.log(line);
+          result = result + line+'\n';
+        }
+      });
+      console.log('result');  
+      resolve(result);
     });
-    result = (stdout as string);
   });
-
-  execProcess.on('spawn', () => {
-    //console.log('exec on spawn');
-  });
-  execProcess.on('error', (err) => {
-    //console.log(`exec on error:${err}`);
-  });
-  execProcess.on('exit', (code, signal) => {
-    //console.log(`exec on exit code: ${code} signal: ${signal}`);
-  });
-  execProcess.on('close', (code: number, args: any[]) => {
-    //console.log(`exec on close code: ${code} args: ${args}`);
-  });
-
-  return result;
 }
 
 async function createWindow() {
@@ -84,12 +73,16 @@ async function createWindow() {
     version = `Erreur : ${e}`;
   }
 
-  ipcMain.on('getTestInfo',(event,args)=> {
+  ipcMain.on('getTestInfo', (event, args) => {
     console.log(`received : ${args}`)
     event.returnValue = 'Coucou2'
   })
 
-  //console.log(`${version}`);
+  ipcMain.on('list',async(event, args) => {
+    const s = await execSample('winget list');
+    //event.returnValue = s;
+    event.sender.send('list-result',{s: s});
+  })
 
   let reqHeader = new Headers();
   reqHeader.append('Content-Type', 'text/xml');
@@ -97,11 +90,8 @@ async function createWindow() {
     method: 'GET', headers: reqHeader,
   };
   const url = `https://raw.githubusercontent.com/microsoft/winget-cli/release-${version}/Localization/Resources/${locale}/winget.resw`
-  //console.log(url);
   var resp = await fetch(url, initObject);
   var data = await resp.text();
-  //console.log(data);
-
   const options = {
     ignoreAttributes: false,
     tagValueProcessor: (tagName, tagValue: any, jPath, hasAttributes, isLeafNode: boolean) => {
@@ -111,12 +101,9 @@ async function createWindow() {
   };
   const parser = new XMLParser(options);
   const json = parser.parse(data);
-  //console.log(json.root.data.length);
   for (var i = 0; i < json.root.data.length; i++) {
-    //console.log(`${json.root.data[i]["@_name"]} : ${json.root.data[i]["value"]}`);
     wingetProperties.set(json.root.data[i]["@_name"], json.root.data[i]["value"]);
   }
-  //console.log(json.root.data[0])
   var js = JSON.stringify(Object.fromEntries(wingetProperties));
   writeFileSync(path.join(__dirname, "test.json"), js, {
     flag: 'w',
@@ -131,9 +118,6 @@ async function createWindow() {
     fullscreenable: true,
   });
 
-  //win.setMenu(null);
-
-  // Test active push message to Renderer-process.
   win.webContents.on('did-finish-load', () => {
     win?.webContents.send('main-process-message', (new Date).toLocaleString())
   })
