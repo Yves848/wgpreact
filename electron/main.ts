@@ -1,4 +1,4 @@
-import { app, BrowserWindow } from 'electron';
+import { app, BrowserWindow, ipcMain } from 'electron';
 import { exec } from "child_process";
 import path from 'node:path'
 import { readFileSync, writeFileSync } from 'fs';
@@ -84,6 +84,10 @@ async function createWindow() {
     version = `Erreur : ${e}`;
   }
 
+  ipcMain.on('getTestInfo',(event,args)=> {
+    return ('coucou');
+  })
+
   //console.log(`${version}`);
 
   let reqHeader = new Headers();
@@ -112,19 +116,19 @@ async function createWindow() {
     wingetProperties.set(json.root.data[i]["@_name"], json.root.data[i]["value"]);
   }
   //console.log(json.root.data[0])
- var js = JSON.stringify(Object.fromEntries(wingetProperties));
- writeFileSync(path.join(__dirname, "test.json"), js, {
-  flag: 'w',
-});
+  var js = JSON.stringify(Object.fromEntries(wingetProperties));
+  writeFileSync(path.join(__dirname, "test.json"), js, {
+    flag: 'w',
+  });
   win = new BrowserWindow({
     icon: path.join(process.env.PUBLIC, 'wingetposh2.png'),
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       nodeIntegration: true,
-      contextIsolation: false,
+      contextIsolation: true,
     },
     fullscreenable: true,
-  })
+  });
 
   //win.setMenu(null);
 
