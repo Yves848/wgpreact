@@ -85,7 +85,8 @@ async function createWindow() {
   }
 
   ipcMain.on('getTestInfo',(event,args)=> {
-    return ('coucou');
+    console.log(`received : ${args}`)
+    event.returnValue = 'Coucou2'
   })
 
   //console.log(`${version}`);
@@ -125,7 +126,7 @@ async function createWindow() {
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       nodeIntegration: true,
-      contextIsolation: true,
+      contextIsolation: false,
     },
     fullscreenable: true,
   });

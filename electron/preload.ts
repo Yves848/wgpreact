@@ -1,4 +1,3 @@
-import { ipcRenderer,contextBridge } from "electron"
 
 function domReady(condition: DocumentReadyState[] = ['complete', 'interactive']) {
   return new Promise(resolve => {
@@ -93,24 +92,4 @@ window.onmessage = ev => {
 }
 
 setTimeout(removeLoading, 4999)
-
-export type ContextBridgeApi = {
-  // Declare a `readFile` function that will return a promise. This promise
-  // will contain the data of the file read from the main process.
-  getInfo: (args : any) => string
-}
-
-const exposedApi: ContextBridgeApi = {
-  getInfo: (args : any) => {
-    // Send IPC event to main process to read the file.
-    
-    
-    // Wrap a promise around the `.once` listener that will be sent back from
-    // the main process, once the file has been read.
-    console.log('getInfo');
-   return 'coucou';
-  },
-}
-
-contextBridge.exposeInMainWorld('infos',exposedApi);
 

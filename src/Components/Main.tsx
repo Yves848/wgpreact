@@ -1,18 +1,17 @@
 import * as React from "react";
 import './Main.css';
 
+
 import Button from '@mui/material/Button';
 import AddLinkIcon from '@mui/icons-material/AddLink';
 
-
+const { ipcRenderer } = window.require('electron');
 
 const Main = () => {
   const [info, setInfo] = React.useState<string>('test');
 
   const click = () => {
-    console.log(window.api);
-    const s = window.api.getInfo({});
-    setInfo(s);
+    setInfo(ipcRenderer.sendSync('getTestInfo','coucou'));
   }
   return (
 
