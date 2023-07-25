@@ -1,10 +1,9 @@
 import { app, BrowserWindow, ipcMain, ipcRenderer } from 'electron';
-import { exec } from "child_process";
+
 import path from 'node:path'
 import { writeFileSync } from 'fs';
 import { XMLParser } from 'fast-xml-parser';
-import wgProp from '@/Classes/cMain';
-import wgProperty from '@/Interfaces/IMain';
+import { execSample, exexCommand } from '../src/Utilities/childProcesses';
 
 import '@fontsource/roboto/300.css';
 import '@fontsource/roboto/400.css';
@@ -28,39 +27,11 @@ let win: BrowserWindow | null
 // 🚧 Use ['ENV_NAME'] avoid vite:define plugin - Vite@2.x
 const VITE_DEV_SERVER_URL = process.env['VITE_DEV_SERVER_URL']
 
-function exexCommand(args: string): Promise<string> {
-  return new Promise<string>((resolve, reject) => {
-    exec(args, { 'encoding': 'utf8' }, (error, stdout) => {
-      if (error) {
-        reject(error.message as string);
-      }
-      resolve(stdout as string);
-    });
-  })
-}
+
 
 let wingetProperties = new Map<string, string>();
 
-function execSample(args: string): Promise<string> {
-  return new Promise<string>((resolve, reject) => {
-    var result: string = '';
-    const execProcess = exec(args, { 'encoding': 'utf8' }, (error, stdout) => {
-      var s: string[] = [];
-      s = (stdout as string).split('\r\n');
-      s.forEach((line, i) => {
-        if (line.match('----------')) {
-          //console.log(s[i - 1]);
-        }
-        if (line.match('winget$')) {
-          //console.log(line);
-          result = result + line+'\n';
-        }
-      });
-      console.log('result');  
-      resolve(result);
-    });
-  });
-}
+
 
 async function createWindow() {
   var l = app.getLocale();
@@ -80,7 +51,6 @@ async function createWindow() {
 
   ipcMain.on('list',async(event, args) => {
     const s = await execSample('winget list');
-    //event.returnValue = s;
     event.sender.send('list-result',{s: s});
   })
 
@@ -105,7 +75,7 @@ async function createWindow() {
     wingetProperties.set(json.root.data[i]["@_name"], json.root.data[i]["value"]);
   }
   var js = JSON.stringify(Object.fromEntries(wingetProperties));
-  writeFileSync(path.join(__dirname, "test.json"), js, {
+  writeFileSync(path.join(__dirname, "resource.json"), js, {
     flag: 'w',
   });
   win = new BrowserWindow({
@@ -125,12 +95,9 @@ async function createWindow() {
   if (VITE_DEV_SERVER_URL) {
     win.loadURL(VITE_DEV_SERVER_URL)
   } else {
-    // win.loadFile('dist/index.html')
     win.loadFile(path.join(process.env.DIST, 'index.html'))
   }
 }
-
-
 app.on('window-all-closed', () => {
   win = null
 })

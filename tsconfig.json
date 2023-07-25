@@ -23,7 +23,7 @@
       ],
       "Interfaces/": [ "./src/Data/Interfaces/", "./src/Data/Interfaces/*"],
       "Objects/*": ["./src/Data/Objects/*" ],
-      "Utilities/*": ["./src/Utilities"]
+      "Utilities/*": ["./src/Utilities"],
     },
 
     /* Linting */
