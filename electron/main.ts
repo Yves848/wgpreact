@@ -3,7 +3,9 @@ import { app, BrowserWindow, ipcMain, ipcRenderer } from 'electron';
 import path from 'node:path'
 import { writeFileSync } from 'fs';
 import { XMLParser } from 'fast-xml-parser';
-import { execSample, exexCommand } from '../src/Utilities/childProcesses';
+import { execSample, execCommand } from '../src/Utilities/childProcesses';
+
+import { WgProps } from '../src/Classes/cMain';
 
 import '@fontsource/roboto/300.css';
 import '@fontsource/roboto/400.css';
@@ -27,22 +29,18 @@ let win: BrowserWindow | null
 // 🚧 Use ['ENV_NAME'] avoid vite:define plugin - Vite@2.x
 const VITE_DEV_SERVER_URL = process.env['VITE_DEV_SERVER_URL']
 
-
-
 let wingetProperties = new Map<string, string>();
 
+let wgProps: WgProps;
 
 
 async function createWindow() {
   var l = app.getLocale();
   var locale = `${l}-${l.toUpperCase()}`
-  var version: string = '';
-  try {
-    version = await exexCommand("winget -v");
-  }
-  catch (e) {
-    version = `Erreur : ${e}`;
-  }
+
+  wgProps = new WgProps();
+  await wgProps.getVersion();
+  console.log(`version : ${wgProps.wgVersion}`);
 
   ipcMain.on('getTestInfo', (event, args) => {
     console.log(`received : ${args}`)
@@ -59,7 +57,7 @@ async function createWindow() {
   let initObject = {
     method: 'GET', headers: reqHeader,
   };
-  const url = `https://raw.githubusercontent.com/microsoft/winget-cli/release-${version}/Localization/Resources/${locale}/winget.resw`
+  const url = `https://raw.githubusercontent.com/microsoft/winget-cli/release-${wgProps.wgVersion}/Localization/Resources/${locale}/winget.resw`
   var resp = await fetch(url, initObject);
   var data = await resp.text();
   const options = {
