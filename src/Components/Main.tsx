@@ -12,14 +12,22 @@ const { ipcRenderer } = window.require('electron');
 const Main = () => {
   const [info, setInfo] = React.useState<string>('test');
   const [waiting, setWating] = React.useState<boolean>(false);
+  const [colName, setColName] = React.useState<string>('');
   ipcRenderer.on('list-result',(event,arg) => {
     setWating(false);
     setInfo(arg.s);
+    
   });
+
+  ipcRenderer.on('col', (event, arg) => {
+    setColName(arg.name);
+    setWating(false);
+  })
 
   const click = () => {
     setWating(true);
-    ipcRenderer.send('list', { test: true });
+    //ipcRenderer.send('list', { test: true });
+    ipcRenderer.send('getCol', { col: 'ID' });
   }
   return (
     <Box sx={{ display: 'flex', p: 2, border: '1px dashed grey', flexDirection: "column" }} >
@@ -32,7 +40,8 @@ const Main = () => {
         startIcon={<AddLinkIcon />}
         onClick={click}
       >Test</Button>
-      {info}
+      {info}<br></br>
+      {colName}
     </Box>
   )
 }

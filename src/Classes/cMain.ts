@@ -14,13 +14,16 @@ export class WgProps {
     this.getLocale();
   }
 
-  getKey(value: string): string {
-    this.props.forEach((val, key) => {
-      if (val === value) {
-        return key;
-      }
-    });
-    return '';
+  getKey(value: string): Promise<string> {
+    return new Promise((resolve, reject) => {
+      this.props.forEach((val, key) => {
+        if (val === value) {
+          resolve(key);
+        }
+      });
+      reject('');
+    })
+    
   }
 
   async getVersion() {
@@ -40,11 +43,11 @@ export class WgProps {
   async downloadResources() {
     const rsPath: string = path.join(__dirname, this.wgVersion).trim();
     if (existsSync(rsPath)) {
-      const cols = require('../dist-electron/resource.json');
+      const file = path.join(rsPath,'resource.json');
+      const cols = require(file);
       this.props = new Map(Object.entries(cols));
     }
     else {
-      console.log(rsPath);
       mkdirSync(rsPath);
       let reqHeader = new Headers();
       reqHeader.append('Content-Type', 'text/xml');
@@ -52,7 +55,6 @@ export class WgProps {
         method: 'GET', headers: reqHeader,
       };
       const url = `https://raw.githubusercontent.com/microsoft/winget-cli/release-${this.wgVersion}/Localization/Resources/${this.wgLocale}/winget.resw`
-      console.log(url);
       var resp = await fetch(url, initObject);
       var data = await resp.text();
       const options = {
@@ -69,7 +71,6 @@ export class WgProps {
       }
       var js = JSON.stringify(Object.fromEntries(this.props));
       const resFile = path.join(rsPath, "resource.json");
-      console.log(resFile);
       writeFileSync(resFile, js, {
         flag: 'w',
       });

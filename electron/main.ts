@@ -40,16 +40,21 @@ async function createWindow() {
   await wgProps.getVersion();
   console.log(`version : ${wgProps.wgVersion}`);
   await wgProps.downloadResources();
-  console.log(wgProps.props);
+  //console.log(wgProps.props);
   ipcMain.on('getTestInfo', (event, args) => {
     console.log(`received : ${args}`)
     event.returnValue = 'Coucou2'
-  })
+  });
 
   ipcMain.on('list',async(event, args) => {
     const s = await execSample('winget list');
     event.sender.send('list-result',{s: s});
-  })
+  });
+
+  ipcMain.on('getCol', async (event,args) => {
+    const key = await wgProps.getKey(args.col);
+    event.sender.send('col',{'name':key});
+  });
   
   win = new BrowserWindow({
     icon: path.join(process.env.PUBLIC, 'wingetposh2.png'),
