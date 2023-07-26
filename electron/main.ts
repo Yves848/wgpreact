@@ -35,13 +35,12 @@ let wgProps: WgProps;
 
 
 async function createWindow() {
-  var l = app.getLocale();
-  var locale = `${l}-${l.toUpperCase()}`
 
   wgProps = new WgProps();
   await wgProps.getVersion();
   console.log(`version : ${wgProps.wgVersion}`);
-
+  await wgProps.downloadResources();
+  console.log(wgProps.props);
   ipcMain.on('getTestInfo', (event, args) => {
     console.log(`received : ${args}`)
     event.returnValue = 'Coucou2'
@@ -51,31 +50,7 @@ async function createWindow() {
     const s = await execSample('winget list');
     event.sender.send('list-result',{s: s});
   })
-
-  let reqHeader = new Headers();
-  reqHeader.append('Content-Type', 'text/xml');
-  let initObject = {
-    method: 'GET', headers: reqHeader,
-  };
-  const url = `https://raw.githubusercontent.com/microsoft/winget-cli/release-${wgProps.wgVersion}/Localization/Resources/${locale}/winget.resw`
-  var resp = await fetch(url, initObject);
-  var data = await resp.text();
-  const options = {
-    ignoreAttributes: false,
-    tagValueProcessor: (tagName, tagValue: any, jPath, hasAttributes, isLeafNode: boolean) => {
-      if (isLeafNode) return tagValue;
-      return "";
-    }
-  };
-  const parser = new XMLParser(options);
-  const json = parser.parse(data);
-  for (var i = 0; i < json.root.data.length; i++) {
-    wingetProperties.set(json.root.data[i]["@_name"], json.root.data[i]["value"]);
-  }
-  var js = JSON.stringify(Object.fromEntries(wingetProperties));
-  writeFileSync(path.join(__dirname, "resource.json"), js, {
-    flag: 'w',
-  });
+  
   win = new BrowserWindow({
     icon: path.join(process.env.PUBLIC, 'wingetposh2.png'),
     webPreferences: {
