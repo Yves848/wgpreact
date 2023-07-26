@@ -23,7 +23,6 @@ export class WgProps {
       });
       reject('');
     })
-    
   }
 
   async getVersion() {
