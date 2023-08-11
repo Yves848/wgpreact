@@ -6,6 +6,7 @@ import Button from '@mui/material/Button';
 import AddLinkIcon from '@mui/icons-material/AddLink';
 import Box from "@mui/material/Box";
 import CircularProgress from '@mui/material/CircularProgress';
+import Container  from "@mui/material/Container";
 
 const { ipcRenderer } = window.require('electron');
 
@@ -30,6 +31,7 @@ const Main = () => {
     ipcRenderer.send('getCol', { col: 'ID' });
   }
   return (
+    <Container>
     <Box sx={{ display: 'flex', p: 2, border: '1px dashed grey', flexDirection: "column" }} >
       {waiting &&
         <CircularProgress />
@@ -43,6 +45,7 @@ const Main = () => {
       {info}<br></br>
       {colName}
     </Box>
+    </Container>   
   )
 }
 
